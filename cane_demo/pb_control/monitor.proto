@@ -1,0 +1,274 @@
+syntax = "proto3";
+
+option java_package = "com.vgulu.server.cloud.protocol";
+/**
+术语定义:
+节点: 采集环境数据的设备
+网关: 对下控制节点,对上连接服务器的设备,例如 zigbee网关 
+服务器: 云端服务程序
+
+以上三个定义均为逻辑定义,不具体指某个设备,例如一个能直接联网的智能门锁,在上述定义中,是分为两个角色,一个是传感器,一个是节点
+
+
+通讯协议说明:
+1 采用mqtt协议
+2 topic规范
+    topic 遵循url路径规范
+    域名: 域名代表某个组织,例如某个学校,某个公司,域名为反向写
+    第一级路径: 网关id号
+    第二级路径: 功能
+    第三级路径: 协议(支持pb和json)
+    参数: 不可附带参数
+    示例: edu.huanong.gongcheng/gateid/report/json
+    植保所的项目订阅的路径为:
+    cn.gdaas.zbs/gateid/pb
+    功能定义:
+    report: 上报,网关发送状态(数据)
+    cmd: 下发命令,网关订阅
+3 包体以protobuf定义
+4 所有回复的errcode, 0都表示正确,其他表示错误
+7 请求时需要设置sid,此字段是int型随机数,由请求的发起方生成,表示此次请求消息的识别id,
+  如果针对该消息回复时,回复消息的sid不变
+5 节点发送的消息是:NodeSend
+6 服务器发送给节点的消息是:ServerSend
+8 NodeSend和ServerSend新增了index字段,表示这个包是当前会话的第几个包,如果为0,表示是最后一个包
+**/
+
+message DRegisterReq {
+    //固定topic: 发送register 监听mac地址去掉冒号
+    string macId = 1;//mac地址
+}
+
+message SRegisterRsp {
+    //topic:mac地址去掉冒号
+    string scribeTopic = 1;//订阅topic
+    string sendTopic = 2;//发送topic
+    GateInfo gate = 3;//网关信息
+
+}
+
+message GateInfo {
+    int32 gateId = 1;//网关ID
+    string gateAlias = 2;//网关别名
+    int32 groupId = 3;//网关所属分组
+    double latitude = 4;//网关纬度 
+    double longitude = 5;//网关经度
+    double x = 6; //网关在平面图上的横坐标0-1, 左上角为原点
+    double y = 7;//网关在平面图上的纵坐标0-1,左上角为原点
+    string map = 8;//网关地图地址
+    int32 address = 9;//网关的硬件地址
+    int32 channel = 10;//信道
+    int32 netType = 11;//1是zigbee,2是lora
+}
+
+message Heartbeat {
+    /**
+    心跳请求/返回
+    心跳请求和返回均为此message,心跳2分钟发一次,超过3此没收到,将会认为节点掉线,服务器发出告警
+    **/
+    int32 time = 1;//服务器或者路由器的时间戳
+}
+
+message Node {
+    enum SensorType {
+        UNKNOW = 0;//未知
+        AIR_TEMPERATURE = 1;//空气温度 int
+        AIR_MOISTURE = 2;//空气湿度 int 
+        AIR_PRESSURE = 3;//气压 float e4
+        SOIL_TEMPERATURE = 4;//土壤温度  int
+        SOIL_MOISTURE = 5;//土壤湿度  int
+        ILLUMINATION = 6;//光照 int
+        VOLT = 7;//电压 float e4
+        AIR_CONDITIONING = 8; //空调
+        EVALVE = 9;//电磁阀
+        POWER_VOLTAGE = 10;//电池电压
+        SOLAR_CELL_VOLTAGE = 11;//太阳能板电压
+        AIR_SPEED = 12;//风速
+        AIR_COURSE = 13;//风向
+        CO2 = 14;//二氧化碳
+        GPS = 15;//gps
+        RELAY = 16;//继电器
+        ECURRENT = 17;//电流
+        CARD = 18;//卡号上报
+        POWER_CAPACITY = 19;//电池容量
+        PHOTOSYNTHESIS = 20;//光合有效值
+        RAIN_CAPACITY = 21;//雨量
+        TORQUE = 22; //扭矩
+        OIL_PRESSURE = 23;//油压
+        OIL_ALLOWANCE = 24;//油量
+        WATER_TEMPERATURE = 25;//水温
+        ENGINE_SPEED = 26;//发动机转速
+        ANGLE = 27;//角度
+        ANGULAR_VELOCITY = 28;//角速度
+        PM_ONE = 29;//pm 1.0
+        PM_TWO_DOT_FIVE = 30; //pm 2.5
+        PM_TEN = 31;//pm 10
+        NOISE = 32;//噪音
+        POWER_PERCENT = 33;//电池剩余电量百分比
+    }
+    /**
+    节点信息
+    **/
+    int32 nodeId = 1; //节点编号
+    //todo 添加其他节点信息
+    repeated int32 sensors = 2; //节点下面传感器数量及类型.最多20个
+    int32 address = 3; //节点地址
+    int32 channel = 4; //节点通道
+    double x = 5;//室内地图上的横坐标
+    double y = 6;//室内地图上的纵坐标
+    double latitude = 7;//纬度
+    double longitude = 8;//经度
+    // bytes mac = 5; //mac 地址 
+}
+
+// message SNodeManageReq {
+//     /**
+//     增加,删除,修改节点
+//     **/
+//     int32 cmd = 1; //增加1 ,删除2, 修改3 
+//     Node node = 2;
+// }
+
+// message DNodeManageRsp {
+//     /**
+//     SNodeManageReq 返回
+//     **/
+//     int32 errorcode = 1;
+// }
+
+message SensorCycle {
+    /**
+    传感器采集周期设置
+    **/
+    int32 sensor = 1;//传感器类型
+    int32 interval = 2;//采集时间间隔,为0表示不采集. 单位:秒
+}
+
+
+message NodeCycle {
+    /**
+    设置节点采集周期
+    **/
+    Node node = 1; //节点信息
+    repeated SensorCycle cycle = 2 ;   
+}
+
+message SCycleSetReq {
+    repeated NodeCycle cycle = 1;
+    int32 timestamp = 3; //时间戳
+}
+
+message DCycleSetRsp {
+    int32 errorcode = 1;
+}
+
+message SSensorCtrlReq {
+    /**
+    传感器控制
+    **/
+    Node node = 1;
+    int32 sensor = 2;
+    int32 cmd = 3; //命令 1.采集数据 2.开, 3.关 4.设置
+    bytes params = 4;//控制参数
+}
+
+message AirConditioningParams {
+    int32 mode = 1;//模式,auto 0 ,cool 1,dry 2,wind 3,heat 4
+    int32 temperature = 2;//温度
+}
+
+message SensorValue {
+    Node node = 1;
+    int32 sensor = 2;
+    double value1 = 3;//经度 或者传感器的值
+    double value2 = 4;//纬度
+    /**
+    * sensor = 18(CARD)时,该值为 message Card
+    **/
+    bytes extra = 5;//附加参数,具体类型根据sensor定
+}
+
+
+
+message Card {
+    string number = 1;
+}
+
+message SSensorValueRsp {
+    int32 errorcode = 1;
+}
+
+message DSensorCtrlRsp {
+    int32 errorcode = 1;
+    SensorValue value = 2;
+}
+
+// message DQueryNodeReq {
+//     /**
+//     网关查询节点信息
+//     **/
+//     int32 timestamp = 1;//上次查询的时间戳
+// }
+
+// message SQueryNodeRsp {
+//     int32 timestamp = 1;//服务器上的时间戳
+// }
+
+message DQueryCycleReq {
+    /**
+    网关查询周期信息
+    **/
+    int32 timestamp = 1;//网关保存的周期时间戳
+}
+
+message  SQueryCycleRsp {
+    int32 timestamp = 1;//服务器上的时间戳
+}
+
+message DValuesReq {
+    repeated SensorValue values = 1;
+}
+
+message SValuesRsp {
+    int32 errorcode = 1;
+}
+
+
+message GateSend {
+    /**
+    网关发送的数据格式
+    **/
+    fixed64 sid = 1;//会话id
+    int32 timestamp = 2;//网关时间戳
+    // int32 index = 3; //index表示这个包是当前会话的第几个包,从1开始递增,如果为0,表示是最后一个包
+    // int32 count = 4; //此次会话包的总数
+    oneof payload {
+        DRegisterReq register = 4; //注册命令
+        DCycleSetRsp cycleSet = 5; //采集周期设置返回
+        DSensorCtrlRsp sensorCtrl = 6; //传感器控制命令返回
+        Heartbeat heartbeat = 7; //心跳
+        SensorValue sensorValue = 8; //传感器状态上报
+        // DQueryNodeReq queryNode = 9; //查询节点
+        DQueryCycleReq queryCycle = 10; //查询周期
+        // DNodeManageRsp nodeManage = 11;//节点管理返回
+        DValuesReq values = 11; //上报传感器的值,一次上报多条
+    }
+}
+
+
+message ServerSend {
+    fixed64 sid = 1;//会话id
+    int32 timestamp = 2;//服务器时间戳
+    // int32 index = 3; //index表示这个包是当前会话的第几个包,从1开始递增,如果为0,表示是最后一个包
+    // int32 count = 4;//此次会话包的总数
+    oneof payload {
+        SRegisterRsp register = 4;//注册返回
+        SCycleSetReq cycleSet = 5;//采集周期设置
+        SSensorCtrlReq sensorCtrl = 6;//传感器控制
+        Heartbeat heartbeat = 7; //心跳
+        SSensorValueRsp sensorValue = 8; //查询节点
+        SQueryCycleRsp queryCycle = 9; //查询周期
+        // SNodeManageReq nodeManage = 10;//节点管理
+        SValuesRsp values = 11; // 上报传感器值的返回 
+    }
+}
