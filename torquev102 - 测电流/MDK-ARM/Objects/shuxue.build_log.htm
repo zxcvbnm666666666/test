@@ -1,0 +1,74 @@
+<html>
+<body>
+<pre>
+<h1>礦ision Build Log</h1>
+<h2>Tool Versions:</h2>
+IDE-Version: μVision V5.36.0.0
+Copyright (C) 2021 ARM Ltd and ARM Germany GmbH. All rights reserved.
+License Information: asd h'm'm, asd, LIC=CZLZX-HN2WQ-2Z8W4-F8EZK-UJXCT-KV63Y
+ 
+Tool Versions:
+Toolchain:       MDK-ARM Plus  Version: 5.36.0.0
+Toolchain Path:  C:\Keil_v5\ARM\ARMCLANG\Bin
+C Compiler:      ArmClang.exe V6.16
+Assembler:       Armasm.exe V6.16
+Linker/Locator:  ArmLink.exe V6.16
+Library Manager: ArmAr.exe V6.16
+Hex Converter:   FromElf.exe V6.16
+CPU DLL:         SARMCM3.DLL V5.36.0.0
+Dialog DLL:      DARMCM1.DLL V1.19.4.0
+Target DLL:      UL2CM3.DLL V1.164.0.0
+Dialog DLL:      TARMCM1.DLL V1.14.4.0
+ 
+<h2>Project:</h2>
+D:\研究生资料\师姐的系统程序\torque（2021.02.04）v102 - 测电流(1)\torque（2021.02.04）v102 - 测电流\MDK-ARM\shuxue.uvprojx
+Project File Date:  12/18/2021
+
+<h2>Output:</h2>
+*** Using Compiler 'V6.16', folder: 'C:\Keil_v5\ARM\ARMCLANG\Bin'
+Build target 'Target 1'
+shuxue.c(4): warning: no previous prototype for function 'integral' [-Wmissing-prototypes]
+double integral(double(*fun)(double x), double a, double b, int n)
+       ^
+shuxue.c(4): note: declare 'static' if the function is not intended to be used outside of this translation unit
+double integral(double(*fun)(double x), double a, double b, int n)
+^
+static 
+shuxue.c(16): warning: no previous prototype for function 'function' [-Wmissing-prototypes]
+double function(double x)
+       ^
+shuxue.c(16): note: declare 'static' if the function is not intended to be used outside of this translation unit
+double function(double x)
+^
+static 
+shuxue.c(21): warning: type specifier missing, defaults to 'int' [-Wimplicit-int]
+  main()
+  ^
+shuxue.c(26): warning: no newline at end of file [-Wnewline-eof]
+}
+ ^
+4 warnings generated.
+compiling shuxue.c...
+linking...
+.\Objects\shuxue.sct(7): error: L6236E: No section matches selector - no section to be FIRST/LAST.
+Not enough information to list image symbols.
+Not enough information to list load addresses in the image map.
+Finished: 2 information, 0 warning and 1 error messages.
+".\Objects\shuxue.axf" - 1 Error(s), 4 Warning(s).
+
+<h2>Software Packages used:</h2>
+
+Package Vendor: ARM
+                http://www.keil.com/pack/ARM.CMSIS.5.8.0.pack
+                ARM.CMSIS.5.8.0
+                CMSIS (Common Microcontroller Software Interface Standard)
+
+<h2>Collection of Component include folders:</h2>
+  C:\Users\h'm'm\AppData\Local\Arm\Packs\ARM\CMSIS\5.8.0\Device\ARM\ARMCM0\Include
+
+<h2>Collection of Component Files used:</h2>
+Target not created.
+Build Time Elapsed:  00:00:02
+</pre>
+</body>
+</html>
